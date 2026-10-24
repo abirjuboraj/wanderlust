@@ -18,57 +18,130 @@ import {
 } from "@/components/ui/carousel";
 import CarouselButtons from "@/components/CarouselButtons";
 
-const destinations = [
-  {
-    id: 1,
-    image: "/images/destinations/image1.png",
-    location: "Nepal",
-    title: "Bali Paradise",
-    price: 2700,
-    duration: "7 Days/6 Nights",
-    rating: "4.5",
-  },
-  {
-    id: 2,
-    image: "/images/destinations/image2.png",
-    location: "Indonesia",
-    title: "Bali Paradise",
-    price: 2700,
-    duration: "7 Days/6 Nights",
-    rating: "4.5",
-  },
-  {
-    id: 3,
-    image: "/images/destinations/image3.png",
-    location: "Indonesia",
-    title: "Bali Paradise",
-    price: 2700,
-    duration: "7 Days/6 Nights",
-    rating: "4.5",
-  },
-  {
-    id: 4,
-    image: "/images/destinations/image4.png",
-    location: "Nepal",
-    title: "Bali Paradise",
-    price: 2700,
-    duration: "7 Days/6 Nights",
-    rating: "4.5",
-  },
-  {
-    id: 5,
-    image: "/images/destinations/image5.png",
-    location: "Indonesia",
-    title: "Bali Paradise",
-    price: 2700,
-    duration: "7 Days/6 Nights",
-    rating: "4.5",
-  },
-];
+const API_URL = "http://localhost:5000/destinations";
+
+/** The homepage always features exactly this many cards. */
+const FEATURED_COUNT = 5;
+
+type Destination = {
+  id: string;
+  image: string;
+  location: string;
+  title: string;
+  price: number;
+  duration: string;
+  rating: string;
+};
+
+type RawDestination = {
+  id?: string | number;
+  _id?: string | number;
+  title?: string;
+  name?: string;
+  destinationName?: string;
+  location?: string;
+  country?: string;
+  price?: number | string;
+  priceUSD?: number | string;
+  duration?: string;
+  rating?: number | string;
+  image?: string;
+  imageUrl?: string;
+  thumbnail?: string;
+};
+
+/** Mirrors the design while the API is unavailable. */
+const seedDestinations: Destination[] = [1, 2, 3, 4, 5, 6].map((number, index) => ({
+  id: `seed-${number}`,
+  image: `/images/destinations/image${number}.png`,
+  location: index % 2 === 0 ? "Nepal" : "Indonesia",
+  title: "Bali Paradise",
+  price: 2700,
+  duration: "7 Days/6 Nights",
+  rating: "4.5",
+}));
+
+function normalizeDestination(raw: RawDestination, index: number): Destination {
+  const price = Number(raw.price ?? raw.priceUSD ?? 0);
+
+  return {
+    id: String(raw.id ?? raw._id ?? index + 1),
+    image:
+      raw.image ??
+      raw.imageUrl ??
+      raw.thumbnail ??
+      `/images/destinations/image${(index % 6) + 1}.png`,
+    location: String(raw.location ?? raw.country ?? "Unknown"),
+    title: String(raw.title ?? raw.name ?? raw.destinationName ?? "Untitled Destination"),
+    price: Number.isFinite(price) ? price : 0,
+    duration: String(raw.duration ?? ""),
+    rating: String(raw.rating ?? "4.5"),
+  };
+}
+
+function FeaturedImage({ src, alt }: { src: string; alt: string }) {
+  const classNames =
+    "absolute inset-0 h-full w-full object-cover transition-transform duration-500 group-hover:scale-105";
+
+  if (/^https?:\/\//.test(src)) {
+    // External API hosts may not be configured in next.config.ts, so render
+    // these directly instead of going through the image optimizer.
+    return (
+      // eslint-disable-next-line @next/next/no-img-element
+      <img src={src} alt={alt} loading="lazy" className={classNames} />
+    );
+  }
+
+  return (
+    <Image
+      src={src}
+      alt={alt}
+      fill
+      sizes="(min-width: 768px) 47vw, 85vw"
+      className={classNames}
+    />
+  );
+}
 
 export default function FeaturedDestinations() {
   const [api, setApi] = React.useState<CarouselApi>();
   const [index, setIndex] = React.useState(0);
+  const [destinations, setDestinations] = React.useState<Destination[]>(
+    seedDestinations.slice(0, FEATURED_COUNT)
+  );
+
+  React.useEffect(() => {
+    let cancelled = false;
+
+    const loadDestinations = async () => {
+      try {
+        const res = await fetch(API_URL);
+        if (!res.ok) throw new Error(`Request failed with status ${res.status}`);
+
+        const data: unknown = await res.json();
+        const list = Array.isArray(data)
+          ? data
+          : Array.isArray((data as { destinations?: unknown[] })?.destinations)
+            ? (data as { destinations: unknown[] }).destinations
+            : [];
+
+        const normalized = list
+          .slice(0, FEATURED_COUNT)
+          .map((item, index) => normalizeDestination(item as RawDestination, index));
+
+        if (!cancelled && normalized.length > 0) setDestinations(normalized);
+      } catch {
+        // Backend not reachable (or CORS blocked) — keep the seed data so the
+        // section still renders exactly like the design.
+      }
+    };
+
+    loadDestinations();
+
+    return () => {
+      cancelled = true;
+    };
+  }, []);
 
   React.useEffect(() => {
     if (!api) return;
@@ -121,12 +194,9 @@ export default function FeaturedDestinations() {
               >
                 <article className="group flex flex-col">
                   <div className="relative aspect-3/2 overflow-hidden rounded-lg bg-muted">
-                    <Image
+                    <FeaturedImage
                       src={destination.image}
                       alt={destination.title}
-                      fill
-                      sizes="(min-width: 768px) 47vw, 85vw"
-                      className="object-cover transition-transform duration-500 group-hover:scale-105"
                     />
                     <span className="absolute top-3 right-3 inline-flex items-center gap-1.5 rounded-md bg-white px-2.5 py-1.5 text-sm font-medium text-black shadow-sm">
                       {destination.rating}
@@ -157,7 +227,7 @@ export default function FeaturedDestinations() {
                   </div>
 
                   <Link
-                    href="/destinations"
+                    href={`/destinations/${destination.id}`}
                     className="mt-4 inline-flex w-fit items-center gap-1.5 text-xs font-medium tracking-wider text-[#29abe2] uppercase underline underline-offset-4 transition-colors hover:text-[#2296c4]"
                   >
                     Book Now

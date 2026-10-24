@@ -1,0 +1,282 @@
+import Image from "next/image";
+import Link from "next/link";
+import {
+  ArrowLeftIcon,
+  CalendarDaysIcon,
+  CheckIcon,
+  ClockIcon,
+  MapPinIcon,
+  PencilIcon,
+  StarIcon,
+  Trash2Icon,
+  UserIcon,
+} from "lucide-react";
+import { buttonVariants } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+
+const API_URL = "http://localhost:5000/destinations";
+
+type RawDestination = {
+  id?: string | number;
+  _id?: string | number;
+  title?: string;
+  name?: string;
+  destinationName?: string;
+  location?: string;
+  country?: string;
+  price?: number | string;
+  priceUSD?: number | string;
+  duration?: string;
+  rating?: number | string;
+  reviews?: number | string;
+  image?: string;
+  imageUrl?: string;
+  overview?: string;
+  description?: string;
+  highlights?: string[];
+};
+
+type Destination = {
+  id: string;
+  title: string;
+  location: string;
+  price: number;
+  duration: string;
+  rating: string;
+  reviews: number;
+  image: string;
+  overview: string;
+  highlights: string[];
+};
+
+/** Mirrors the design while the API is unavailable. */
+const seedDestination: Destination = {
+  id: "bali-paradise",
+  title: "Bali Paradise",
+  location: "Indonesia",
+  price: 1299,
+  duration: "7 Days / 6 Nights",
+  rating: "4.9",
+  reviews: 234,
+  image: "/images/destinations/image1.png",
+  overview:
+    "Experience the magic of Bali with its stunning rice terraces, ancient temples, and pristine beaches. This carefully crafted itinerary takes you through the heart of Indonesian culture, from the artistic hub of Ubud to the vibrant shores of Seminyak. Enjoy luxurious accommodations, authentic local cuisine, and unforgettable sunsets over the Indian Ocean.",
+  highlights: [
+    "Visit the iconic Tanah Lot Temple",
+    "Explore the Tegallalang Rice Terraces in Ubud",
+    "Traditional Balinese cooking class",
+    "Sunset cruise along the southern coast",
+    "Relax on the pristine beaches of Seminyak",
+  ],
+};
+
+function normalizeDestination(raw: RawDestination): Destination {
+  const price = Number(raw.price ?? raw.priceUSD ?? 0);
+  const reviews = Number(raw.reviews ?? 0);
+
+  return {
+    id: String(raw.id ?? raw._id ?? seedDestination.id),
+    title: String(raw.title ?? raw.name ?? raw.destinationName ?? "Untitled Destination"),
+    location: String(raw.location ?? raw.country ?? "Unknown"),
+    price: Number.isFinite(price) ? price : seedDestination.price,
+    duration: String(raw.duration ?? seedDestination.duration),
+    rating: String(raw.rating ?? seedDestination.rating),
+    reviews: Number.isFinite(reviews) ? reviews : seedDestination.reviews,
+    image: raw.image ?? raw.imageUrl ?? seedDestination.image,
+    overview: String(raw.overview ?? raw.description ?? seedDestination.overview),
+    highlights:
+      Array.isArray(raw.highlights) && raw.highlights.length > 0
+        ? raw.highlights
+        : seedDestination.highlights,
+  };
+}
+
+function isRemoteImage(src: string) {
+  return /^https?:\/\//.test(src);
+}
+
+function DestinationImage({ src, alt }: { src: string; alt: string }) {
+  if (isRemoteImage(src)) {
+    // External API hosts may not be configured in next.config.ts, so render
+    // these directly instead of going through the image optimizer.
+    return (
+      // eslint-disable-next-line @next/next/no-img-element
+      <img
+        src={src}
+        alt={alt}
+        className="absolute inset-0 h-full w-full rounded-xl object-cover"
+      />
+    );
+  }
+
+  return (
+    <Image
+      src={src}
+      alt={alt}
+      fill
+      sizes="(min-width: 1280px) 1280px, 100vw"
+      className="rounded-xl object-cover"
+    />
+  );
+}
+
+export default async function DestinationDetailPage({
+  params,
+}: PageProps<"/destinations/[destinationId]">) {
+  const { destinationId } = await params;
+
+  let destination = seedDestination;
+  try {
+    const res = await fetch(`${API_URL}/${destinationId}`, { cache: "no-store" });
+    if (res.ok) destination = normalizeDestination((await res.json()) as RawDestination);
+  } catch {
+    // Backend not reachable (or CORS blocked) — keep the seed data so the
+    // page still renders exactly like the design.
+  }
+
+  const { title, location, price, duration, rating, image, overview, highlights } =
+    destination;
+
+  const perks = [
+    { icon: CalendarDaysIcon, label: "Free cancellation" },
+    { icon: UserIcon, label: "Best price guarantee" },
+    { icon: ClockIcon, label: "24/7 support" },
+  ];
+
+  return (
+    <div className="mx-auto w-full max-w-360 px-6 pt-8 pb-14 sm:px-10 sm:pt-12 sm:pb-20">
+      <div className="flex flex-wrap items-center justify-between gap-4">
+        <Link
+          href="/destinations"
+          className="inline-flex items-center gap-2 text-sm font-medium text-neutral-600 transition-colors hover:text-neutral-900"
+        >
+          <ArrowLeftIcon className="size-4" />
+          Back to Destinations
+        </Link>
+
+        <div className="flex items-center gap-3">
+          <Link
+            href={`/destinations/${destinationId}/edit`}
+            className={buttonVariants({
+              variant: "outline",
+              className: "h-10 gap-2 rounded-md px-4 font-medium text-neutral-900",
+            })}
+          >
+            <PencilIcon />
+            Edit
+          </Link>
+          <Link
+            href="/destinations"
+            className={buttonVariants({
+              variant: "outline",
+              className:
+                "h-10 gap-2 rounded-md border-red-200 px-4 font-medium text-red-500 hover:border-red-300 hover:bg-red-50 hover:text-red-600",
+            })}
+          >
+            <Trash2Icon />
+            Cancel
+          </Link>
+        </div>
+      </div>
+
+      <div className="relative mt-6 aspect-12/5 w-full overflow-hidden rounded-xl bg-muted sm:mt-8">
+        <DestinationImage src={image} alt={title} />
+      </div>
+
+      <div className="mt-8 grid grid-cols-1 gap-10 sm:mt-10 lg:grid-cols-[1fr_320px] lg:gap-12">
+        <div>
+          <p className="flex items-center gap-1.5 text-sm text-neutral-500 sm:text-base">
+            <MapPinIcon className="size-4" />
+            {location}
+          </p>
+
+          <h1 className="mt-2 text-3xl font-semibold tracking-tight text-neutral-900 sm:text-4xl lg:text-5xl">
+            {title}
+          </h1>
+
+          <div className="mt-4 flex flex-wrap items-center gap-3 text-sm text-neutral-600 sm:text-base">
+            <span className="inline-flex items-center gap-1.5">
+              <StarIcon className="size-4 fill-neutral-900 text-neutral-900" />
+              {rating}
+            </span>
+            <span className="h-4 w-px bg-neutral-300" />
+            <span className="inline-flex items-center gap-1.5">
+              <ClockIcon className="size-4 text-neutral-500" />
+              {duration}
+            </span>
+          </div>
+
+          <section className="mt-8 sm:mt-10">
+            <h2 className="text-xl font-semibold tracking-tight text-neutral-900 sm:text-2xl">
+              Overview
+            </h2>
+            <p className="mt-3 text-sm leading-7 text-neutral-600 sm:text-base sm:leading-8">
+              {overview}
+            </p>
+          </section>
+
+          <section className="mt-8 sm:mt-10">
+            <h2 className="text-xl font-semibold tracking-tight text-neutral-900 sm:text-2xl">
+              Highlights
+            </h2>
+            <ul className="mt-4 grid grid-cols-1 gap-x-8 gap-y-3 sm:grid-cols-2">
+              {highlights.map((highlight) => (
+                <li key={highlight} className="flex items-start gap-2.5">
+                  <CheckIcon className="mt-0.5 size-4 shrink-0 text-emerald-500" />
+                  <span className="text-sm leading-6 text-neutral-700 sm:text-base">
+                    {highlight}
+                  </span>
+                </li>
+              ))}
+            </ul>
+          </section>
+        </div>
+
+        <aside className="lg:sticky lg:top-24 lg:self-start">
+          <div className="flex flex-col gap-5 rounded-xl bg-white p-6 shadow-sm ring-1 ring-neutral-200">
+            <div>
+              <p className="text-sm text-neutral-500">Starting from</p>
+              <p className="mt-1 text-4xl font-semibold tracking-tight text-neutral-900">
+                $<span className="text-[#29abe2]">{price}</span>
+              </p>
+              <p className="mt-1 text-sm text-neutral-400">per person</p>
+            </div>
+
+            <div className="border-t border-neutral-200 pt-5">
+              <label
+                htmlFor="departure-date"
+                className="text-sm font-medium text-neutral-900"
+              >
+                Select Date
+              </label>
+              <Input
+                id="departure-date"
+                type="date"
+                defaultValue="2026-05-15"
+                className="mt-2 h-10 rounded-md border-transparent bg-[#f4f7fa] px-3 text-sm text-neutral-900 focus-visible:border-[#29abe2]/60 focus-visible:ring-[#29abe2]/25 sm:h-11"
+              />
+              <button
+                type="button"
+                className="mt-4 h-11 w-full rounded-md bg-[#29abe2] text-base font-medium text-white transition-colors hover:bg-[#2296c4]"
+              >
+                Book Now
+              </button>
+            </div>
+
+            <ul className="flex flex-col gap-2.5 border-t border-neutral-200 pt-5">
+              {perks.map(({ icon: Icon, label }) => (
+                <li
+                  key={label}
+                  className="flex items-center gap-2.5 text-sm text-neutral-600"
+                >
+                  <Icon className="size-4 text-neutral-500" />
+                  {label}
+                </li>
+              ))}
+            </ul>
+          </div>
+        </aside>
+      </div>
+    </div>
+  );
+}

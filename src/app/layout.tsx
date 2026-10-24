@@ -9,7 +9,7 @@ const josefinSans = Josefin_Sans({
 });
 
 export const metadata: Metadata = {
-  title: "Wanderlast",
+  title: "WanderLust",
   description: "Your gateway to extraordinary travel experiences around the world.",
 };
 

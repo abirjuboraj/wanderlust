@@ -10,8 +10,8 @@ import { cn } from "cn";
 const navLinks = [
   { href: "/", label: "Home" },
   { href: "/destinations", label: "Destinations" },
+  { href: "/add-destination", label: "Add Destination" },
   { href: "/my-bookings", label: "My Bookings" },
-  { href: "/admin", label: "Admin" },
 ];
 
 const accountLinks = [
@@ -64,11 +64,11 @@ export default function Navbar() {
           <Link
             href="/"
             className="justify-self-center"
-            aria-label="Wanderlast home"
+            aria-label="WanderLust home"
           >
             <Image
               src="/images/Wanderlast.png"
-              alt="Wanderlast"
+              alt="WanderLust"
               width={208}
               height={40}
               priority
