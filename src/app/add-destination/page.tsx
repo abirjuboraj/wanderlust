@@ -15,15 +15,9 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { cn } from "cn";
+import { API_BASE_URL, CATEGORIES } from "@/lib/constants";
 
-const categories = [
-  "Beach",
-  "Mountain",
-  "City Break",
-  "Adventure",
-  "Cultural",
-  "Wildlife",
-];
+const categories = CATEGORIES;
 
 type FormState = {
   destinationName: string;
@@ -92,7 +86,7 @@ export default function AddDestinationPage() {
     // TODO: send to your API / backend action
     console.log("Add travel package:", payload);
 
-    const res = await fetch("http://localhost:5000/add-destination", {
+    const res = await fetch(`${API_BASE_URL}/add-destination`, {
       method: "POST",
       headers: {
         "Content-type": "application/json",

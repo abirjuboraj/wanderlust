@@ -13,6 +13,7 @@ import {
   DialogTrigger,
   DialogClose,
 } from "@/components/ui/dialog";
+import { API_BASE_URL } from "@/lib/constants";
 
 interface DeleteDestinationDialogProps {
   destinationId: string;
@@ -30,7 +31,7 @@ export default function DeleteDestinationDialog({
   const handleDelete = async () => {
     setIsDeleting(true);
     try {
-      const res = await fetch(`http://localhost:5000/destinations/${destinationId}`, {
+      const res = await fetch(`${API_BASE_URL}/destinations/${destinationId}`, {
         method: "DELETE",
       });
 
@@ -39,7 +40,6 @@ export default function DeleteDestinationDialog({
       }
 
       setOpen(false);
-      // Redirect back to destinations list after successful deletion
       router.push("/destinations");
       router.refresh();
     } catch (error) {
@@ -65,7 +65,6 @@ export default function DeleteDestinationDialog({
 
       <DialogContent className="max-w-[calc(100%-2rem)] sm:max-w-[460px] rounded-xl bg-white p-6 shadow-xl">
         <DialogHeader className="flex flex-row items-center gap-3 text-left">
-          {/* Warning Icon Badge */}
           <div className="flex size-11 shrink-0 items-center justify-center rounded-full bg-red-50 text-red-500">
             <AlertTriangleIcon className="size-5" />
           </div>

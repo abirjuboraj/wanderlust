@@ -24,28 +24,9 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { cn } from "cn";
+import { API_BASE_URL, CATEGORIES, type TravelPackageData } from "@/lib/constants";
 
-const categories = [
-  "Beach",
-  "Mountain",
-  "City Break",
-  "Adventure",
-  "Cultural",
-  "Wildlife",
-];
-
-export type TravelPackageData = {
-  id?: string;
-  _id?: string;
-  destinationName?: string;
-  country?: string;
-  category?: string;
-  price?: number | string;
-  duration?: string;
-  departureDate?: string;
-  imageUrl?: string;
-  description?: string;
-};
+export type { TravelPackageData };
 
 type FormState = {
   destinationName: string;
@@ -65,6 +46,25 @@ interface EditDestinationDialogProps {
 
 const inputClass =
   "h-11 rounded-md border-transparent bg-[#f4f7fa] px-3.5 text-sm text-neutral-900 placeholder:text-neutral-400 focus-visible:border-[#29abe2]/60 focus-visible:ring-[#29abe2]/25";
+
+function FormField({
+  htmlFor,
+  label,
+  children,
+}: {
+  htmlFor: string;
+  label: string;
+  children: React.ReactNode;
+}) {
+  return (
+    <div className="flex flex-col gap-1.5">
+      <Label htmlFor={htmlFor} className="text-sm font-semibold text-neutral-900">
+        {label}
+      </Label>
+      {children}
+    </div>
+  );
+}
 
 export default function EditDestinationDialog({
   initialData,
@@ -105,24 +105,19 @@ export default function EditDestinationDialog({
     setIsSubmitting(true);
 
     const targetId = initialData?._id || initialData?.id;
-
     const payload = {
       ...form,
       price: Number(form.price) || form.price,
       category,
     };
 
-    console.log("Submitting travel package update:", payload);
-
     try {
       if (onSave) {
         await onSave({ ...payload, _id: targetId, id: targetId });
       } else if (targetId) {
-        const res = await fetch(`http://localhost:5000/destinations/${targetId}`, {
+        const res = await fetch(`${API_BASE_URL}/destinations/${targetId}`, {
           method: "PATCH",
-          headers: {
-            "Content-Type": "application/json",
-          },
+          headers: { "Content-Type": "application/json" },
           body: JSON.stringify(payload),
         });
 
@@ -133,7 +128,7 @@ export default function EditDestinationDialog({
           try {
             await res.json();
           } catch {
-            // response might be empty or not json
+            // response might be empty
           }
         }
       }
@@ -180,26 +175,18 @@ export default function EditDestinationDialog({
           className="flex flex-1 flex-col overflow-y-auto px-5 py-4 sm:px-6 sm:py-5 gap-4"
         >
           {/* Destination Name */}
-          <div className="flex flex-col gap-1.5">
-            <Input
-              id="dialogDestinationName"
-              placeholder="Bali Paradise"
-              value={form.destinationName}
-              onChange={(e) => updateField("destinationName", e.target.value)}
-              className={inputClass}
-              required
-            />
-          </div>
+          <Input
+            id="dialogDestinationName"
+            placeholder="Bali Paradise"
+            value={form.destinationName}
+            onChange={(e) => updateField("destinationName", e.target.value)}
+            className={inputClass}
+            required
+          />
 
           {/* Country & Category */}
           <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-            <div className="flex flex-col gap-1.5">
-              <Label
-                htmlFor="dialogCountry"
-                className="text-sm font-semibold text-neutral-900"
-              >
-                Country
-              </Label>
+            <FormField htmlFor="dialogCountry" label="Country">
               <Input
                 id="dialogCountry"
                 placeholder="Indonesia"
@@ -208,15 +195,9 @@ export default function EditDestinationDialog({
                 className={inputClass}
                 required
               />
-            </div>
+            </FormField>
 
-            <div className="flex flex-col gap-1.5">
-              <Label
-                htmlFor="dialogCategory"
-                className="text-sm font-semibold text-neutral-900"
-              >
-                Category
-              </Label>
+            <FormField htmlFor="dialogCategory" label="Category">
               <Select
                 value={category}
                 onValueChange={(val) => setCategory(val ?? "Beach")}
@@ -231,7 +212,7 @@ export default function EditDestinationDialog({
                   <SelectValue placeholder="Select category" />
                 </SelectTrigger>
                 <SelectContent className="rounded-md border border-neutral-200 bg-white shadow-md">
-                  {categories.map((cat) => (
+                  {CATEGORIES.map((cat) => (
                     <SelectItem
                       key={cat}
                       value={cat}
@@ -242,18 +223,12 @@ export default function EditDestinationDialog({
                   ))}
                 </SelectContent>
               </Select>
-            </div>
+            </FormField>
           </div>
 
-          {/* Price (USD) & Duration */}
+          {/* Price & Duration */}
           <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-            <div className="flex flex-col gap-1.5">
-              <Label
-                htmlFor="dialogPrice"
-                className="text-sm font-semibold text-neutral-900"
-              >
-                Price (USD)
-              </Label>
+            <FormField htmlFor="dialogPrice" label="Price (USD)">
               <Input
                 id="dialogPrice"
                 type="number"
@@ -263,15 +238,9 @@ export default function EditDestinationDialog({
                 className={inputClass}
                 required
               />
-            </div>
+            </FormField>
 
-            <div className="flex flex-col gap-1.5">
-              <Label
-                htmlFor="dialogDuration"
-                className="text-sm font-semibold text-neutral-900"
-              >
-                Duration
-              </Label>
+            <FormField htmlFor="dialogDuration" label="Duration">
               <Input
                 id="dialogDuration"
                 placeholder="e.g., 7 Days/6 Nights"
@@ -279,17 +248,11 @@ export default function EditDestinationDialog({
                 onChange={(e) => updateField("duration", e.target.value)}
                 className={inputClass}
               />
-            </div>
+            </FormField>
           </div>
 
           {/* Departure Date */}
-          <div className="flex flex-col gap-1.5">
-            <Label
-              htmlFor="dialogDepartureDate"
-              className="text-sm font-semibold text-neutral-900"
-            >
-              Departure Date
-            </Label>
+          <FormField htmlFor="dialogDepartureDate" label="Departure Date">
             <Input
               id="dialogDepartureDate"
               type="text"
@@ -298,16 +261,10 @@ export default function EditDestinationDialog({
               onChange={(e) => updateField("departureDate", e.target.value)}
               className={inputClass}
             />
-          </div>
+          </FormField>
 
           {/* Image URL */}
-          <div className="flex flex-col gap-1.5">
-            <Label
-              htmlFor="dialogImageUrl"
-              className="text-sm font-semibold text-neutral-900"
-            >
-              Image URL
-            </Label>
+          <FormField htmlFor="dialogImageUrl" label="Image URL">
             <Input
               id="dialogImageUrl"
               placeholder="https://example.com/image.jpg"
@@ -315,16 +272,10 @@ export default function EditDestinationDialog({
               onChange={(e) => updateField("imageUrl", e.target.value)}
               className={inputClass}
             />
-          </div>
+          </FormField>
 
           {/* Description */}
-          <div className="flex flex-col gap-1.5">
-            <Label
-              htmlFor="dialogDescription"
-              className="text-sm font-semibold text-neutral-900"
-            >
-              Description
-            </Label>
+          <FormField htmlFor="dialogDescription" label="Description">
             <Textarea
               id="dialogDescription"
               placeholder="Describe the travel experience..."
@@ -336,7 +287,7 @@ export default function EditDestinationDialog({
                 "h-auto min-h-24 resize-y py-2.5 leading-relaxed"
               )}
             />
-          </div>
+          </FormField>
 
           {/* Actions */}
           <div className="-mx-5 -mb-4 sm:-mx-6 sm:-mb-5 mt-3 flex flex-col-reverse sm:flex-row items-stretch sm:items-center justify-end gap-2.5 sm:gap-3 border-t border-neutral-100 bg-white/95 backdrop-blur-xs p-4 sm:px-6">

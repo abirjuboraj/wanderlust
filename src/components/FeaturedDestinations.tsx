@@ -18,37 +18,17 @@ import {
 } from "@/components/ui/carousel";
 import CarouselButtons from "@/components/CarouselButtons";
 
-const API_URL = "http://localhost:5000/destinations";
+import {
+  API_BASE_URL,
+  normalizeDestination,
+  type Destination,
+  type RawDestination,
+} from "@/lib/constants";
+
+const API_URL = `${API_BASE_URL}/destinations`;
 
 /** The homepage always features exactly this many cards. */
 const FEATURED_COUNT = 5;
-
-type Destination = {
-  id: string;
-  image: string;
-  location: string;
-  title: string;
-  price: number;
-  duration: string;
-  rating: string;
-};
-
-type RawDestination = {
-  id?: string | number;
-  _id?: string | number;
-  title?: string;
-  name?: string;
-  destinationName?: string;
-  location?: string;
-  country?: string;
-  price?: number | string;
-  priceUSD?: number | string;
-  duration?: string;
-  rating?: number | string;
-  image?: string;
-  imageUrl?: string;
-  thumbnail?: string;
-};
 
 /** Mirrors the design while the API is unavailable. */
 const seedDestinations: Destination[] = [1, 2, 3, 4, 5, 6].map((number, index) => ({
@@ -60,24 +40,6 @@ const seedDestinations: Destination[] = [1, 2, 3, 4, 5, 6].map((number, index) =
   duration: "7 Days/6 Nights",
   rating: "4.5",
 }));
-
-function normalizeDestination(raw: RawDestination, index: number): Destination {
-  const price = Number(raw.price ?? raw.priceUSD ?? 0);
-
-  return {
-    id: String(raw.id ?? raw._id ?? index + 1),
-    image:
-      raw.image ??
-      raw.imageUrl ??
-      raw.thumbnail ??
-      `/images/destinations/image${(index % 6) + 1}.png`,
-    location: String(raw.location ?? raw.country ?? "Unknown"),
-    title: String(raw.title ?? raw.name ?? raw.destinationName ?? "Untitled Destination"),
-    price: Number.isFinite(price) ? price : 0,
-    duration: String(raw.duration ?? ""),
-    rating: String(raw.rating ?? "4.5"),
-  };
-}
 
 function FeaturedImage({ src, alt }: { src: string; alt: string }) {
   const classNames =

@@ -18,18 +18,20 @@ import {
 import { Skeleton } from "@/components/ui/skeleton";
 import { cn } from "cn";
 
-const API_URL = "http://localhost:5000/destinations";
+import {
+  API_BASE_URL,
+  CATEGORIES,
+  isRemoteImage,
+  normalizeDestination,
+  type Destination,
+  type RawDestination,
+} from "@/lib/constants";
+
+const API_URL = `${API_BASE_URL}/destinations`;
 
 const ALL = "all";
 
-const categories = [
-  "Beach",
-  "Mountain",
-  "City Break",
-  "Adventure",
-  "Cultural",
-  "Wildlife",
-];
+const categories = CATEGORIES;
 
 const priceOptions: {
   value: string;
@@ -59,35 +61,6 @@ const sortOptions: { value: string; label: string }[] = [
   { value: "name-asc", label: "Name: A – Z" },
 ];
 
-type Destination = {
-  id: string;
-  title: string;
-  location: string;
-  price: number;
-  duration: string;
-  rating: string;
-  image: string;
-  category: string;
-};
-
-type RawDestination = {
-  id?: string | number;
-  _id?: string | number;
-  title?: string;
-  name?: string;
-  destinationName?: string;
-  location?: string;
-  country?: string;
-  price?: number | string;
-  priceUSD?: number | string;
-  duration?: string;
-  rating?: number | string;
-  image?: string;
-  imageUrl?: string;
-  thumbnail?: string;
-  category?: string;
-};
-
 const localImages = [1, 2, 3, 4, 5, 6].map(
   (number) => `/images/destinations/image${number}.png`
 );
@@ -103,25 +76,6 @@ const seedDestinations: Destination[] = localImages.map((image, index) => ({
   image,
   category: categories[index % categories.length],
 }));
-
-function normalizeDestination(raw: RawDestination, index: number): Destination {
-  const price = Number(raw.price ?? raw.priceUSD ?? 0);
-
-  return {
-    id: String(raw.id ?? raw._id ?? index + 1),
-    title: String(raw.title ?? raw.name ?? raw.destinationName ?? "Untitled Destination"),
-    location: String(raw.location ?? raw.country ?? "Unknown"),
-    price: Number.isFinite(price) ? price : 0,
-    duration: String(raw.duration ?? ""),
-    rating: String(raw.rating ?? "4.5"),
-    image:
-      raw.image ??
-      raw.imageUrl ??
-      raw.thumbnail ??
-      localImages[index % localImages.length],
-    category: String(raw.category ?? categories[index % categories.length]),
-  };
-}
 
 function DestinationImage({
   src,

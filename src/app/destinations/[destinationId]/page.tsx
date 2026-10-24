@@ -13,40 +13,15 @@ import EditDestinationDialog from "@/components/EditDestinationDialog";
 import DeleteDestinationDialog from "@/components/DeleteDestinationDialog";
 import { Input } from "@/components/ui/input";
 
-const API_URL = "http://localhost:5000/destinations";
+import {
+  API_BASE_URL,
+  isRemoteImage,
+  normalizeDestination,
+  type Destination,
+  type RawDestination,
+} from "@/lib/constants";
 
-type RawDestination = {
-  id?: string | number;
-  _id?: string | number;
-  title?: string;
-  name?: string;
-  destinationName?: string;
-  location?: string;
-  country?: string;
-  price?: number | string;
-  priceUSD?: number | string;
-  duration?: string;
-  rating?: number | string;
-  reviews?: number | string;
-  image?: string;
-  imageUrl?: string;
-  overview?: string;
-  description?: string;
-  highlights?: string[];
-};
-
-type Destination = {
-  id: string;
-  title: string;
-  location: string;
-  price: number;
-  duration: string;
-  rating: string;
-  reviews: number;
-  image: string;
-  overview: string;
-  highlights: string[];
-};
+const API_URL = `${API_BASE_URL}/destinations`;
 
 /** Mirrors the design while the API is unavailable. */
 const seedDestination: Destination = {
@@ -68,31 +43,6 @@ const seedDestination: Destination = {
     "Relax on the pristine beaches of Seminyak",
   ],
 };
-
-function normalizeDestination(raw: RawDestination): Destination {
-  const price = Number(raw.price ?? raw.priceUSD ?? 0);
-  const reviews = Number(raw.reviews ?? 0);
-
-  return {
-    id: String(raw.id ?? raw._id ?? seedDestination.id),
-    title: String(raw.title ?? raw.name ?? raw.destinationName ?? "Untitled Destination"),
-    location: String(raw.location ?? raw.country ?? "Unknown"),
-    price: Number.isFinite(price) ? price : seedDestination.price,
-    duration: String(raw.duration ?? seedDestination.duration),
-    rating: String(raw.rating ?? seedDestination.rating),
-    reviews: Number.isFinite(reviews) ? reviews : seedDestination.reviews,
-    image: raw.image ?? raw.imageUrl ?? seedDestination.image,
-    overview: String(raw.overview ?? raw.description ?? seedDestination.overview),
-    highlights:
-      Array.isArray(raw.highlights) && raw.highlights.length > 0
-        ? raw.highlights
-        : seedDestination.highlights,
-  };
-}
-
-function isRemoteImage(src: string) {
-  return /^https?:\/\//.test(src);
-}
 
 function DestinationImage({ src, alt }: { src: string; alt: string }) {
   if (isRemoteImage(src)) {
@@ -214,7 +164,7 @@ export default async function DestinationDetailPage({
               Highlights
             </h2>
             <ul className="mt-4 grid grid-cols-1 gap-x-8 gap-y-3 sm:grid-cols-2">
-              {highlights.map((highlight) => (
+              {(highlights ?? []).map((highlight) => (
                 <li key={highlight} className="flex items-start gap-2.5">
                   <CheckIcon className="mt-0.5 size-4 shrink-0 text-emerald-500" />
                   <span className="text-sm leading-6 text-neutral-700 sm:text-base">
