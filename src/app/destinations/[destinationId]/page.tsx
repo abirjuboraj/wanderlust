@@ -6,12 +6,11 @@ import {
   CheckIcon,
   ClockIcon,
   MapPinIcon,
-  PencilIcon,
   StarIcon,
-  Trash2Icon,
   UserIcon,
 } from "lucide-react";
-import { buttonVariants } from "@/components/ui/button";
+import EditDestinationDialog from "@/components/EditDestinationDialog";
+import DeleteDestinationDialog from "@/components/DeleteDestinationDialog";
 import { Input } from "@/components/ui/input";
 
 const API_URL = "http://localhost:5000/destinations";
@@ -155,27 +154,22 @@ export default async function DestinationDetailPage({
         </Link>
 
         <div className="flex items-center gap-3">
-          <Link
-            href={`/destinations/${destinationId}/edit`}
-            className={buttonVariants({
-              variant: "outline",
-              className: "h-10 gap-2 rounded-md px-4 font-medium text-neutral-900",
-            })}
-          >
-            <PencilIcon />
-            Edit
-          </Link>
-          <Link
-            href="/destinations"
-            className={buttonVariants({
-              variant: "outline",
-              className:
-                "h-10 gap-2 rounded-md border-red-200 px-4 font-medium text-red-500 hover:border-red-300 hover:bg-red-50 hover:text-red-600",
-            })}
-          >
-            <Trash2Icon />
-            Cancel
-          </Link>
+          <EditDestinationDialog
+            initialData={{
+              id: destinationId,
+              _id: destinationId,
+              destinationName: title,
+              country: location,
+              price,
+              duration,
+              imageUrl: isRemoteImage(image) ? image : "",
+              description: overview,
+            }}
+          />
+          <DeleteDestinationDialog
+            destinationId={destinationId}
+            destinationTitle={title}
+          />
         </div>
       </div>
 
