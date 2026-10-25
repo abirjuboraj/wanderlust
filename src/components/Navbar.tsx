@@ -3,9 +3,10 @@
 import { useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
-import { usePathname } from "next/navigation";
-import { MenuIcon, User, XIcon } from "lucide-react";
+import { usePathname, useRouter } from "next/navigation";
+import { LogOut, MenuIcon, User, XIcon } from "lucide-react";
 import { cn } from "cn";
+import { useSession, signOut } from "@/utils/auth-client";
 
 const navLinks = [
   { href: "/", label: "Home" },
@@ -14,19 +15,28 @@ const navLinks = [
   { href: "/my-bookings", label: "My Bookings" },
 ];
 
-const accountLinks = [
-  { href: "/profile", label: "Profile", icon: User },
-  { href: "/login", label: "Login" },
-  { href: "/signup", label: "Sign Up" },
-];
-
 export default function Navbar() {
   const pathname = usePathname();
   const [menuOpen, setMenuOpen] = useState(false);
+  const { data: session, isPending } = useSession();
+  const router = useRouter();
+
+  const user = session?.user;
+  const initial = user?.name ? user.name.charAt(0).toUpperCase() : (user?.email ? user.email.charAt(0).toUpperCase() : "U");
+
+  const handleSignOut = async () => {
+    await signOut({
+      fetchOptions: {
+        onSuccess: () => {
+          router.push("/sign-in")
+        },
+      },
+    });
+  };
 
   return (
     <header className="sticky top-0 z-50 w-full px-3 pt-2 sm:px-4">
-      <div className="w-full border-b border-black/5 bg-white">
+      <div className="relative w-full border-b border-black/5 bg-white">
         <nav className="mx-auto grid h-14 w-full max-w-360 grid-cols-[auto_1fr_auto] items-center gap-3 px-4 sm:px-6 md:grid-cols-[1fr_auto_1fr]">
           <div className="flex items-center gap-4">
             <button
@@ -76,27 +86,61 @@ export default function Navbar() {
             />
           </Link>
 
-          <ul className="flex items-center justify-end gap-3 sm:gap-5 md:gap-6">
-            {accountLinks.map((link) => {
-              const Icon = link.icon;
-              return (
-                <li key={link.href} className={cn(link.icon && "hidden sm:block")}>
+          <div className="flex items-center justify-end gap-3 sm:gap-4">
+            {isPending ? (
+              <div className="h-8 w-20 animate-pulse rounded-full bg-neutral-100" />
+            ) : user ? (
+              <div className="flex items-center gap-2.5 sm:gap-3">
+                <Link
+                  href="/profile"
+                  className="flex items-center gap-2 rounded-full p-1 transition-colors hover:bg-neutral-50 sm:pr-2.5"
+                  title={user.name || user.email}
+                >
+                  <div className="flex size-8 items-center justify-center rounded-full bg-[#29abe2] text-xs font-semibold text-white shadow-sm ring-2 ring-white">
+                    {initial}
+                  </div>
+                  <span className="hidden text-sm font-medium text-neutral-800 sm:inline max-w-28 truncate">
+                    {user.name || user.email.split("@")[0]}
+                  </span>
+                </Link>
+
+                <button
+                  type="button"
+                  onClick={handleSignOut}
+                  title="Sign out"
+                  aria-label="Sign out"
+                  className="flex items-center gap-1 rounded-md p-1.5 text-xs text-neutral-600 transition-colors hover:bg-neutral-100 hover:text-destructive sm:px-2.5 sm:py-1.5"
+                >
+                  <LogOut className="size-4" strokeWidth={1.75} />
+                  <span className="hidden sm:inline">Sign Out</span>
+                </button>
+              </div>
+            ) : (
+              <ul className="flex items-center justify-end gap-3 sm:gap-5 md:gap-6">
+                <li>
                   <Link
-                    href={link.href}
+                    href="/sign-in"
                     className="flex items-center gap-1.5 text-sm text-neutral-800 transition-colors hover:text-[#29abe2] sm:text-[17px]"
                   >
-                    {Icon ? <Icon className="size-4" strokeWidth={1.75} /> : null}
-                    {link.label}
+                    Sign In
                   </Link>
                 </li>
-              );
-            })}
-          </ul>
+                <li>
+                  <Link
+                    href="/sign-up"
+                    className="flex items-center gap-1.5 rounded-full bg-[#29abe2] px-3.5 py-1 text-sm font-medium text-white transition-opacity hover:opacity-90 sm:text-[15px]"
+                  >
+                    Sign Up
+                  </Link>
+                </li>
+              </ul>
+            )}
+          </div>
         </nav>
 
         {menuOpen && (
-          <div className="border-t border-neutral-100 md:hidden">
-            <ul className="mx-auto flex w-full max-w-360 flex-col px-4 py-1 sm:px-6">
+          <div className="absolute top-full left-0 right-0 z-50 border-b border-black/10 bg-white shadow-xl md:hidden">
+            <ul className="mx-auto flex w-full max-w-360 flex-col px-4 py-2 sm:px-6">
               {navLinks.map((link) => {
                 const isActive = pathname === link.href;
                 return (
@@ -107,7 +151,7 @@ export default function Navbar() {
                       className={cn(
                         "block py-2.5 text-[15px] transition-colors",
                         isActive
-                          ? "text-[#29abe2]"
+                          ? "text-[#29abe2] font-medium"
                           : "text-neutral-800 hover:text-[#29abe2]"
                       )}
                     >
@@ -116,6 +160,53 @@ export default function Navbar() {
                   </li>
                 );
               })}
+
+              <li className="my-1 border-t border-neutral-100 pt-1">
+                {user ? (
+                  <div className="flex items-center justify-between py-2.5">
+                    <Link
+                      href="/profile"
+                      onClick={() => setMenuOpen(false)}
+                      className="flex items-center gap-2"
+                    >
+                      <div className="flex size-7 items-center justify-center rounded-full bg-[#29abe2] text-xs font-semibold text-white">
+                        {initial}
+                      </div>
+                      <span className="text-sm font-medium text-neutral-800 truncate max-w-40">
+                        {user.name || user.email}
+                      </span>
+                    </Link>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setMenuOpen(false);
+                        handleSignOut();
+                      }}
+                      className="flex items-center gap-1 text-xs text-destructive hover:underline"
+                    >
+                      <LogOut className="size-3.5" />
+                      Sign Out
+                    </button>
+                  </div>
+                ) : (
+                  <div className="flex items-center gap-4 py-2.5 text-sm">
+                    <Link
+                      href="/sign-in"
+                      onClick={() => setMenuOpen(false)}
+                      className="text-neutral-800 hover:text-[#29abe2]"
+                    >
+                      Sign In
+                    </Link>
+                    <Link
+                      href="/sign-up"
+                      onClick={() => setMenuOpen(false)}
+                      className="font-medium text-[#29abe2]"
+                    >
+                      Sign Up
+                    </Link>
+                  </div>
+                )}
+              </li>
             </ul>
           </div>
         )}
