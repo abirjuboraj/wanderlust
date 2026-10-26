@@ -20,6 +20,7 @@ import {
   type Destination,
   type RawDestination,
 } from "@/lib/constants";
+import BookingCard from "@/components/booking/BookingCard";
 
 const API_URL = `${API_BASE_URL}/destinations`;
 
@@ -30,6 +31,7 @@ const seedDestination: Destination = {
   location: "Indonesia",
   price: 1299,
   duration: "7 Days / 6 Nights",
+  departureDate: "2026-05-15",
   rating: "4.9",
   reviews: 234,
   image: "/images/destinations/image1.png",
@@ -176,50 +178,8 @@ export default async function DestinationDetailPage({
           </section>
         </div>
 
-        <aside className="lg:sticky lg:top-24 lg:self-start">
-          <div className="flex flex-col gap-5 rounded-xl bg-white p-6 shadow-sm ring-1 ring-neutral-200">
-            <div>
-              <p className="text-sm text-neutral-500">Starting from</p>
-              <p className="mt-1 text-4xl font-semibold tracking-tight text-neutral-900">
-                $<span className="text-[#29abe2]">{price}</span>
-              </p>
-              <p className="mt-1 text-sm text-neutral-400">per person</p>
-            </div>
-
-            <div className="border-t border-neutral-200 pt-5">
-              <label
-                htmlFor="departure-date"
-                className="text-sm font-medium text-neutral-900"
-              >
-                Select Date
-              </label>
-              <Input
-                id="departure-date"
-                type="date"
-                defaultValue="2026-05-15"
-                className="mt-2 h-10 rounded-md border-transparent bg-[#f4f7fa] px-3 text-sm text-neutral-900 focus-visible:border-[#29abe2]/60 focus-visible:ring-[#29abe2]/25 sm:h-11"
-              />
-              <button
-                type="button"
-                className="mt-4 h-11 w-full rounded-md bg-[#29abe2] text-base font-medium text-white transition-colors hover:bg-[#2296c4]"
-              >
-                Book Now
-              </button>
-            </div>
-
-            <ul className="flex flex-col gap-2.5 border-t border-neutral-200 pt-5">
-              {perks.map(({ icon: Icon, label }) => (
-                <li
-                  key={label}
-                  className="flex items-center gap-2.5 text-sm text-neutral-600"
-                >
-                  <Icon className="size-4 text-neutral-500" />
-                  {label}
-                </li>
-              ))}
-            </ul>
-          </div>
-        </aside>
+              <BookingCard destination = {destination}></BookingCard>
+        
       </div>
     </div>
   );

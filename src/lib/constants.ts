@@ -32,6 +32,7 @@ export type Destination = {
   location: string;
   price: number;
   duration: string;
+  departureDate?: string;
   rating: string;
   reviews?: number;
   image: string;
@@ -51,6 +52,7 @@ export type RawDestination = {
   price?: number | string;
   priceUSD?: number | string;
   duration?: string;
+  departureDate?: string;
   rating?: number | string;
   reviews?: number | string;
   image?: string;
@@ -85,6 +87,7 @@ export function normalizeDestination(
     location: String(raw.location ?? raw.country ?? "Unknown"),
     price: Number.isFinite(price) ? price : 0,
     duration: String(raw.duration ?? "7 Days/6 Nights"),
+    departureDate: raw.departureDate,
     rating: String(raw.rating ?? "4.8"),
     reviews: Number.isFinite(reviews) ? reviews : 120,
     image,

@@ -128,7 +128,6 @@ export default function DestinationsPage() {
         );
 
         if (!cancelled && normalized.length > 0) {
-          console.log("destinations:", normalized);
           setDestinations(normalized);
         }
       } catch {
