@@ -25,6 +25,7 @@ import {
 } from "@/components/ui/select";
 import { cn } from "cn";
 import { API_BASE_URL, CATEGORIES, type TravelPackageData } from "@/lib/constants";
+import { getTokenFromClient } from "@/utils/getTokenFromClient";
 
 export type { TravelPackageData };
 
@@ -115,9 +116,13 @@ export default function EditDestinationDialog({
       if (onSave) {
         await onSave({ ...payload, _id: targetId, id: targetId });
       } else if (targetId) {
+
+        const token = await getTokenFromClient();
         const res = await fetch(`${API_BASE_URL}/destinations/${targetId}`, {
           method: "PATCH",
-          headers: { "Content-Type": "application/json" },
+          headers: { "Content-Type": "application/json",
+            "authorization": `Bearer ${token}`
+           },
           body: JSON.stringify(payload),
         });
 
@@ -126,7 +131,8 @@ export default function EditDestinationDialog({
           console.error(`Backend PATCH failed with status ${res.status}:`, errorText);
         } else {
           try {
-            await res.json();
+            const result = await res.json();
+            console.log(result);
           } catch {
             // response might be empty
           }

@@ -16,6 +16,8 @@ import {
 } from "@/components/ui/select";
 import { cn } from "cn";
 import { API_BASE_URL, CATEGORIES } from "@/lib/constants";
+import { authClient } from "@/utils/auth-client";
+import { getTokenFromClient } from "@/utils/getTokenFromClient";
 
 const categories = CATEGORIES;
 
@@ -82,6 +84,8 @@ export default function AddDestinationPage() {
   const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
 
+    const token = await getTokenFromClient();
+
     const payload = { ...form, category };
     // TODO: send to your API / backend action
     console.log("Add travel package:", payload);
@@ -90,11 +94,14 @@ export default function AddDestinationPage() {
       method: "POST",
       headers: {
         "Content-type": "application/json",
+        "authorization" : `Bearer ${token}`
       },
       body: JSON.stringify(payload),
     });
 
-    await res.json();
+    const result = await res.json();
+
+    console.log(result);
 
     setSuccessMessage(`"${form.destinationName}" was added successfully.`);
     setForm(initialForm);

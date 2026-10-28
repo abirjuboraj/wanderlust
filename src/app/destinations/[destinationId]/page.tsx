@@ -21,6 +21,9 @@ import {
   type RawDestination,
 } from "@/lib/constants";
 import BookingCard from "@/components/booking/BookingCard";
+import { auth } from "@/utils/auth";
+import { headers } from "next/headers";
+import { getTokenFromServer } from "@/utils/getTokenFromServer";
 
 const API_URL = `${API_BASE_URL}/destinations`;
 
@@ -77,8 +80,16 @@ export default async function DestinationDetailPage({
   const { destinationId } = await params;
 
   let destination = seedDestination;
+
+ const token = await getTokenFromServer();
+
+
   try {
-    const res = await fetch(`${API_URL}/${destinationId}`, { cache: "no-store" });
+    const res = await fetch(`${API_URL}/${destinationId}`, { cache: "no-store",
+      headers: {
+        "authorization": `Bearer ${token}`,
+      }
+     });
     if (res.ok) destination = normalizeDestination((await res.json()) as RawDestination);
   } catch {
     // Backend not reachable (or CORS blocked) — keep the seed data so the

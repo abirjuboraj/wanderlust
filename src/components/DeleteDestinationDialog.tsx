@@ -14,6 +14,7 @@ import {
   DialogClose,
 } from "@/components/ui/dialog";
 import { API_BASE_URL } from "@/lib/constants";
+import { getTokenFromClient } from "@/utils/getTokenFromClient";
 
 interface DeleteDestinationDialogProps {
   destinationId: string;
@@ -31,8 +32,12 @@ export default function DeleteDestinationDialog({
   const handleDelete = async () => {
     setIsDeleting(true);
     try {
+      const token = await getTokenFromClient();
       const res = await fetch(`${API_BASE_URL}/destinations/${destinationId}`, {
         method: "DELETE",
+        headers: {
+          authorization: `Bearer ${token}`,
+        },
       });
 
       if (!res.ok) {

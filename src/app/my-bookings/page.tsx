@@ -27,6 +27,7 @@ import { Button } from "@/components/ui/button";
 import { API_BASE_URL, isRemoteImage } from "@/lib/constants";
 import { useSession } from "@/utils/auth-client";
 import { toast } from "@/components/ui/toast";
+import { getTokenFromClient } from "@/utils/getTokenFromClient";
 
 // Backend contract:
 //   GET    /booking?email=<user email> → the user's bookings (array)
@@ -71,7 +72,9 @@ const bookingShortId = (booking: BookingRecord): string => {
 };
 
 const bookingPrice = (booking: BookingRecord): string =>
-  booking.price !== undefined && booking.price !== "" ? String(booking.price) : "—";
+  booking.price !== undefined && booking.price !== ""
+    ? String(booking.price)
+    : "—";
 
 const destinationHref = (booking: BookingRecord): string => {
   const key = booking.destinationId || booking.id;
@@ -108,31 +111,48 @@ function BookingImage({ src, alt }: { src: string; alt: string }) {
   );
 }
 
+
+
 export default function MyBookingsPage() {
   const { data: session } = useSession();
   const email = session?.user?.email;
 
   const [bookings, setBookings] = useState<BookingRecord[]>([]);
   // null = nothing loaded for this email yet (→ loading view)
-  const [loaded, setLoaded] = useState<{ email: string; ok: boolean } | null>(null);
+  const [loaded, setLoaded] = useState<{ email: string; ok: boolean } | null>(
+    null,
+  );
   const [reloadKey, setReloadKey] = useState(0);
 
-  const [pendingCancel, setPendingCancel] = useState<BookingRecord | null>(null);
+  const [pendingCancel, setPendingCancel] = useState<BookingRecord | null>(
+    null,
+  );
   const [isCancelling, setIsCancelling] = useState(false);
-
+  
   useEffect(() => {
     if (!email) return;
     let cancelled = false;
 
     (async () => {
       try {
+        const token = await getTokenFromClient();
+
+        // NOTE: a Response body can only be consumed once — call res.json()
+        // a single time and reuse the result.
         const res = await fetch(
-          `${API_BASE_URL}/booking?email=${encodeURIComponent(email)}`
+          `${API_BASE_URL}/booking?email=${encodeURIComponent(email)}`,
+          {
+            headers: {
+              authorization: `Bearer ${token}`,
+            },
+          }
         );
         if (!res.ok) throw new Error(`GET /booking responded ${res.status}`);
         const payload: unknown = await res.json().catch(() => null);
         if (!cancelled) {
-          setBookings(Array.isArray(payload) ? (payload as BookingRecord[]) : []);
+          setBookings(
+            Array.isArray(payload) ? (payload as BookingRecord[]) : [],
+          );
           setLoaded({ email, ok: true });
         }
       } catch (error) {
@@ -171,21 +191,31 @@ export default function MyBookingsPage() {
 
     setIsCancelling(true);
     try {
+      const token = await getTokenFromClient();
       const res = await fetch(
         `${API_BASE_URL}/booking/${encodeURIComponent(bookingId)}`,
-        { method: "DELETE" }
+        {
+          method: "DELETE",
+          headers: {
+            authorization: `Bearer ${token}`,
+          },
+        },
       );
 
       if (!res.ok) {
-        const data = (await res.json().catch(() => ({}))) as { message?: string };
+        const data = (await res.json().catch(() => ({}))) as {
+          message?: string;
+        };
         throw new Error(
           typeof data.message === "string" && data.message
             ? data.message
-            : `Cancel failed (status ${res.status})`
+            : `Cancel failed (status ${res.status})`,
         );
       }
 
-      setBookings((prev) => prev.filter((booking) => booking._id !== bookingId));
+      setBookings((prev) =>
+        prev.filter((booking) => booking._id !== bookingId),
+      );
       setPendingCancel(null);
       toast.add({
         title: "Booking Cancelled",
@@ -197,7 +227,9 @@ export default function MyBookingsPage() {
       toast.add({
         title: "Cancel Failed",
         description:
-          error instanceof Error ? error.message : "Could not cancel the booking.",
+          error instanceof Error
+            ? error.message
+            : "Could not cancel the booking.",
         type: "error",
         timeout: 3000,
       });
@@ -215,7 +247,7 @@ export default function MyBookingsPage() {
       : "loading";
 
   const visibleBookings = [...bookings].sort(
-    (a, b) => bookingTime(b) - bookingTime(a)
+    (a, b) => bookingTime(b) - bookingTime(a),
   );
 
   return (
@@ -346,7 +378,9 @@ export default function MyBookingsPage() {
                     <span className="flex items-center gap-2" title={fullId}>
                       <TagIcon className="size-4 shrink-0 text-neutral-400" />
                       Booking ID:{" "}
-                      <span className="font-medium text-neutral-600">{shortId}</span>
+                      <span className="font-medium text-neutral-600">
+                        {shortId}
+                      </span>
                     </span>
                   </div>
 

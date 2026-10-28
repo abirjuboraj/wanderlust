@@ -16,6 +16,7 @@ import {
 import { useSession } from "@/utils/auth-client";
 import React, { useCallback, useEffect, useState, useSyncExternalStore } from "react";
 import { toast } from "../ui/toast";
+import { getTokenFromClient } from "@/utils/getTokenFromClient";
 
 // Backend contract this card relies on:
 //   GET  /booking?email=<user email>
@@ -119,6 +120,8 @@ const extractBookedDates = (
     return [...dates];
 };
 
+  
+
 const isDuplicateRejection = (status: number, message: string) =>
     status === 409 || /already|duplicate|exist|taken|booked/i.test(message);
 
@@ -155,14 +158,22 @@ const BookingCard = ({ destination }: { destination: TravelPackageData }) => {
     const lookupKey = `${userEmail ?? ""}|${destinationId ?? ""}|${destTitle}`;
     const [lookup, setLookup] = useState<{ key: string; dates: string[] } | null>(null);
 
+ 
+
     useEffect(() => {
         if (!userEmail) return;
         let cancelled = false;
 
         (async () => {
             try {
+                const token = await getTokenFromClient();
                 const res = await fetch(
-                    `${API_BASE_URL}/booking?email=${encodeURIComponent(userEmail)}`
+                    `${API_BASE_URL}/booking?email=${encodeURIComponent(userEmail)}`,
+                    {
+                        headers: {
+                            authorization: `Bearer ${token}`,
+                        },
+                    }
                 );
                 if (!res.ok) throw new Error(`GET /booking responded ${res.status}`);
                 const payload: unknown = await res.json().catch(() => null);
