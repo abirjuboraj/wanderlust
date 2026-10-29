@@ -21,7 +21,6 @@ import { cn } from "cn";
 import {
   API_BASE_URL,
   CATEGORIES,
-  isRemoteImage,
   normalizeDestination,
   type Destination,
   type RawDestination,

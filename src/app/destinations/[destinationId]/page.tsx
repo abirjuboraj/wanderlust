@@ -2,16 +2,14 @@ import Image from "next/image";
 import Link from "next/link";
 import {
   ArrowLeftIcon,
-  CalendarDaysIcon,
   CheckIcon,
   ClockIcon,
   MapPinIcon,
   StarIcon,
-  UserIcon,
 } from "lucide-react";
 import EditDestinationDialog from "@/components/EditDestinationDialog";
 import DeleteDestinationDialog from "@/components/DeleteDestinationDialog";
-import { Input } from "@/components/ui/input";
+
 
 import {
   API_BASE_URL,
@@ -21,8 +19,6 @@ import {
   type RawDestination,
 } from "@/lib/constants";
 import BookingCard from "@/components/booking/BookingCard";
-import { auth } from "@/utils/auth";
-import { headers } from "next/headers";
 import { getTokenFromServer } from "@/utils/getTokenFromServer";
 
 const API_URL = `${API_BASE_URL}/destinations`;
@@ -98,12 +94,6 @@ export default async function DestinationDetailPage({
 
   const { title, location, price, duration, rating, image, overview, highlights } =
     destination;
-
-  const perks = [
-    { icon: CalendarDaysIcon, label: "Free cancellation" },
-    { icon: UserIcon, label: "Best price guarantee" },
-    { icon: ClockIcon, label: "24/7 support" },
-  ];
 
   return (
     <div className="mx-auto w-full max-w-360 px-6 pt-8 pb-14 sm:px-10 sm:pt-12 sm:pb-20">
